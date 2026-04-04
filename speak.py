@@ -1,21 +1,27 @@
-import pyttsx3
-import threading
+import asyncio
+import edge_tts
+from playsound import playsound
+import os
 
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
+VOICE = "en-IN-NeerjaNeural"  # 🔥 Female Indian voice
 
-# Female voice
-engine.setProperty('voice', voices[1].id if len(voices) > 1 else voices[0].id)
-engine.setProperty('rate', 170)
 
-lock = threading.Lock()
+async def generate_audio(text, file="voice.mp3"):
+    communicate = edge_tts.Communicate(text, VOICE)
+    await communicate.save(file)
+
 
 def speak(text):
     print("MJ:", text)
 
-    def run():
-        with lock:
-            engine.say(text)
-            engine.runAndWait()
+    try: 
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(generate_audio(text))
+        playsound("voice.mp3")
 
-    threading.Thread(target=run).start()
+        # cleanup
+        os.remove("voice.mp3")
+
+    except Exception as e:
+        print("Voice Error:", e)
