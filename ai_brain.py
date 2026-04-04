@@ -6,13 +6,14 @@ def ask_ai(question):
 
     global chat_history
 
-    # 🧠 Personality prompt
     system_prompt = """
-You are JARVIS, a smart, slightly witty, helpful AI assistant.
-You speak like a calm, intelligent female assistant.
-Keep answers short, natural, and friendly.
-Sometimes add light emotion (like: "Sure!", "Of course!", "Alright!")
-Do NOT be robotic.
+You are MJ, a smart AI assistant like Iron Man's Jarvis.
+
+Rules:
+- Speak naturally like a human assistant
+- Be short, clear, and confident
+- Slightly witty but respectful
+- Address user as Manoj sometimes
 """
 
     chat_history.append(f"User: {question}")
@@ -29,6 +30,6 @@ Do NOT be robotic.
 
     response = result.stdout.strip()
 
-    chat_history.append(f"Jarvis: {response}")
+    chat_history.append(f"MJ: {response}")
 
     return response
