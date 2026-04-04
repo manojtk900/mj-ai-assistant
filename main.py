@@ -12,6 +12,30 @@ speak("MJ is online")
 
 active = False
 last_active = time.time()
+TIMEOUT = 60
+
+processing = False
+
+
+def process_command(command):
+    global processing, last_active
+
+    try:
+        gui.update_status("Thinking")
+
+        response = execute(command)
+
+        if response:
+            gui.update_response(response)
+
+    except Exception as e:
+        print("ERROR:", e)
+        speak("Something went wrong")
+
+    gui.update_status("Idle")
+    processing = False
+    last_active = time.time()
+
 
 while True:
 
@@ -19,7 +43,7 @@ while True:
 
     command = listen()
 
-    # GUI typed input
+    # GUI typing
     if gui.typed_command:
         command = gui.typed_command
         gui.typed_command = None
@@ -30,41 +54,47 @@ while True:
     command = command.lower().strip()
     print("COMMAND:", command)
 
-    # Wake word
-    if "mj" in command:
+    # ignore noise
+    if len(command.split()) < 2:
+        continue
+
+    # 🎤 wake word
+    if any(word in command for word in ["mj", "m j", "emjay", "sanjay"]):
         active = True
         last_active = time.time()
         speak("Yes Manoj")
 
-        command = command.replace("mj", "").strip()
-        if command == "":
+        command = command.replace("mj", "").replace("sanjay", "").strip()
+        if not command:
             continue
 
     if not active:
         continue
 
+    # 🛑 stop
     if "stop" in command:
-        speak("Going to sleep")
+        speak("Going to sleep Manoj")
         gui.update_status("Sleeping")
         active = False
         continue
 
+    # ⏳ prevent overlap
+    if processing:
+        speak("One moment Manoj")
+        continue
+
+    processing = True
+
     gui.update_command(command)
     gui.update_status("Processing")
 
-    try:
-        response = execute(command)
+    threading.Thread(
+        target=process_command,
+        args=(command,),
+        daemon=True
+    ).start()
 
-        if response:
-            gui.update_response(response)
-
-    except Exception as e:
-        print("ERROR:", e)
-        speak("Error occurred")
-
-    gui.update_status("Idle")
-    last_active = time.time()
-
-    if active and (time.time() - last_active > 20):
-        speak("Going to sleep")
+    # 🔥 FIXED timeout (correct logic)
+    if active and (time.time() - last_active > TIMEOUT):
+        speak("Going to sleep due to inactivity")
         active = False
